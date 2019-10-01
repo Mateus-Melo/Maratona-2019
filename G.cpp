@@ -7,12 +7,9 @@ void menor_linha(int matriz[TAM][TAM], int t){
         int menor=INF;
         for(int j=0;j<t;j++)
             menor=min(menor,matriz[i][j]);
-        //cout<<menor<<endl;
         for(int j=0;j<t;j++){
             matriz[i][j]-=menor;
-            //cout<<matriz[i][j]<<" ";
         }
-        //cout<<endl;
     }
 }
 void menor_coluna(int matriz[TAM][TAM], int t){
@@ -20,17 +17,14 @@ void menor_coluna(int matriz[TAM][TAM], int t){
         int menor=INF;
         for(int j=0;j<t;j++)
             menor=min(menor,matriz[j][i]);
-        //cout<<menor<<endl;
         for(int j=0;j<t;j++){
             matriz[j][i]-=menor;
-            //cout<<matriz[j][i]<<" ";
         }
-        //cout<<endl;
     }
 }
 bool marc[TAM][TAM];
 
-void hungarian(int matriz[TAM][TAM], int t){
+void hungarian(int matriz[TAM][TAM], int t, vector<int>&pessoas){
     while(true){
         vector<bool>mark_l(TAM,true);
         for(int i=0;i<t;i++){
@@ -53,24 +47,18 @@ void hungarian(int matriz[TAM][TAM], int t){
         for(int i=0;i<t;i++){
             if(mark_l[i]){
                 linhas.push(i);
-                cout<<"l"<<i<<endl;
             }
         }
-        //cout<<linhas.size()<<endl;
         while(!linhas.empty()||!colunas.empty()){
             while(!linhas.empty()){
                 int l=linhas.front();
                 linhas.pop();
-                cout<<l<<endl;
                 for(int i=0;i<t;i++){
-                    cout<<matriz[l][i]<<" ";
                     if(!matriz[l][i]&&!mark_c[i]){
                         mark_c[i]=true;
                         colunas.push(i);
-                        cout<<"c"<<i<<endl;
                     }
                 }
-                cout<<endl;
             }
             while(!colunas.empty()){
                 int c=colunas.front();
@@ -79,28 +67,23 @@ void hungarian(int matriz[TAM][TAM], int t){
                     if(!matriz[i][c]&&!mark_l[i]&&marc[i][c]){
                         mark_l[i]=true;
                         linhas.push(i);
-                        cout<<"l"<<i<<endl;
                     }
                 }
             }
-            cout<<colunas.size()<<endl;
             
         }
-        //vector<bool>draw_l(TAM),draw_c(TAM);
         int cont=0;
         for(int i=0;i<t;i++){
-                cout<<mark_l[i]<<" ";
-                //draw_l[i]=!mark_l[i];
                 cont+=!mark_l[i];
         }
-            cout<<endl;    
             for(int i=0;i<t;i++){
-                cout<<mark_c[i]<<" ";
                 cont+=mark_c[i];
             }
-            cout<<endl;
-            if(cont==t)
+
+            if(cont==t){
+                
                 return;
+            }
             int menor=INF;
             for(int i=0;i<t;i++){
                 if(mark_l[i]){
@@ -110,7 +93,6 @@ void hungarian(int matriz[TAM][TAM], int t){
                     }
                 }
             }
-            cout<<menor<<endl;
             for(int i=0;i<t;i++){
                 for(int j=0;j<t;j++){
                     if(!mark_l[i]&&mark_c[j])
@@ -130,9 +112,10 @@ int main() {
     /*1500  4000  4500
  2000  6000  3500
  2000  4000  2500*/
+    vector<int>pessoas(TAM,-1);
     menor_linha(matriz, 3);
     menor_coluna(matriz, 3);
-    hungarian(matriz, 3);
+    hungarian(matriz, 3,pessoas);
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++)
             cout<<matriz[i][j]<<" ";
