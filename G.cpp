@@ -37,7 +37,6 @@ bool bfs_satura(Arco grafo[TAM][TAM],int s, int t){
     fila[ini]=mp(INF,s);
     while(ini<fim){
         ii davez=fila[ini++];
-        //cout<<davez.vertice<<endl;
         if(davez.vertice==t){
             satura(grafo, precede, t, davez.menor_capacidade);
             return true;
@@ -66,7 +65,6 @@ void inicia_fluxo(Arco grafo[TAM][TAM],int s,int t){
     for(int i=1;i<t;i++){
         for(int j=1;j<t;j++){
             if((grafo[0][i].capacidade-grafo[0][i].fluxo)&&(grafo[i][j].capacidade-grafo[i][j].fluxo)&&(grafo[j][t].capacidade-grafo[j][t].fluxo)){
-                //cout<<i<<" "<<j<<endl;
                 grafo[0][i].fluxo++;
                 grafo[i][0].capacidade++;
                 grafo[i][j].fluxo++;
@@ -80,7 +78,7 @@ void inicia_fluxo(Arco grafo[TAM][TAM],int s,int t){
     
     
 }
-void menor_linha(int matriz[3][3], int t){
+void menor_linha(int matriz[TAM][TAM], int t){
     for(int i=0;i<t;i++){
         int menor=INF;
         for(int j=0;j<t;j++)
@@ -90,7 +88,7 @@ void menor_linha(int matriz[3][3], int t){
         }
     }
 }
-void menor_coluna(int matriz[3][3], int t){
+void menor_coluna(int matriz[TAM][TAM], int t){
     for(int i=0;i<t;i++){
         int menor=INF;
         for(int j=0;j<t;j++)
@@ -100,103 +98,100 @@ void menor_coluna(int matriz[3][3], int t){
         }
     }
 }
-bool marc[TAM][TAM];
+int direcao(int matriz[TAM][TAM],int linha,int col,int t){
+    int ret=0;
+    for(int i=0;i<t;i++){
+        ret-=(matriz[linha][i]==0);
+        ret+=(matriz[i][col]==0);
+    }
+    cout<<" afds"<<ret<<endl;
+    return ret;
+}
 
-void hungarian(int matriz[3][3], int t){
-    while(true){
-        vector<bool>mark_l(TAM,true);
-        for(int i=0;i<t;i++){
-            for(int j=0;j<t;j++){
-                marc[i][j]=!matriz[i][j];
-            }
+bool colore(int matriz[TAM][TAM],int linha,int col, int dir,int cores[TAM][TAM], int t){
+    cout<<linha<<" "<<col<<" "<<cores[linha][col]<<" "<<dir<<endl;
+    if(cores[linha][col]==2)
+        return 0;
+    if(dir>0 && cores[linha][col]==1)
+        return 0;
+    if(dir<=0 && cores[linha][col]==-1)
+        return 0;
+    for(int i=0;i<t;i++){
+        if(dir>0){
+            if(cores[i][col])
+                cores[i][col]=2;
+            else
+                cores[i][col]=1;
         }
-        for(int i=0;i<t;i++){
-            for(int j=0;j<t;j++){
-                if(marc[i][j]){
-                    mark_l[i]=false;
-                    for(int k=i+1;k<t;k++){
-                        marc[k][j]=false;
-                    }
-                }
-            }
+        else{
+            if(cores[linha][i])
+                cores[linha][i]=2;
+            else
+                cores[linha][i]=-1;
         }
-        vector<bool>mark_c(TAM,false);
-        queue<int>linhas,colunas;
-        for(int i=0;i<t;i++){
-            if(mark_l[i]){
-                linhas.push(i);
-            }
-        }
-        while(!linhas.empty()||!colunas.empty()){
-            while(!linhas.empty()){
-                int l=linhas.front();
-                linhas.pop();
-                for(int i=0;i<t;i++){
-                    if(!matriz[l][i]&&!mark_c[i]){
-                        mark_c[i]=true;
-                        colunas.push(i);
-                    }
-                }
-            }
-            while(!colunas.empty()){
-                int c=colunas.front();
-                colunas.pop();
-                for(int i=0;i<t;i++){
-                    if(!matriz[i][c]&&!mark_l[i]&&marc[i][c]){
-                        mark_l[i]=true;
-                        linhas.push(i);
-                    }
-                }
-            }
-            
-        }
-        int cont=0;
-        for(int i=0;i<t;i++){
-                cont+=!mark_l[i];
-        }
-            for(int i=0;i<t;i++){
-                cont+=mark_c[i];
-            }
+    }
+    cout<<"aqui"<<endl;
+    return 1;
+}
 
-            if(cont==t){
-                
-                return;
-            }
-            int menor=INF;
-            for(int i=0;i<t;i++){
-                if(mark_l[i]){
-                    for(int j=0;j<t;j++){
-                        if(!mark_c[j])
-                            menor=min(menor,matriz[i][j]);
-                    }
-                }
-            }
-            for(int i=0;i<t;i++){
-                for(int j=0;j<t;j++){
-                    if(!mark_l[i]&&mark_c[j])
-                        matriz[i][j]+=menor;
-                    if(mark_l[i]&&!mark_c[j])
-                        matriz[i][j]-=menor;
-                }
-            }
-            //return;
-    } 
+int num_linhas(int matriz[TAM][TAM],int t, int cores[TAM][TAM]){
+    int ret=0;
+    for(int i=0;i<t;i++){
+        for(int j=0;j<t;j++){
+            if(!matriz[i][j])
+                ret+=colore(matriz,i,j,direcao(matriz,i,j,t),cores,t);
+        }
+    }
+    cout<<"aaaa"<<ret<<endl;
+    return ret;
+}
+
+void novos_zeros(int matriz[TAM][TAM],int t,int cores[TAM][TAM]){
+    int menor=INF;
+    for(int i=0;i<t;i++){
+        for(int j=0;j<t;j++){
+            if(!cores[i][j])
+                menor=min(menor,matriz[i][j]);
+        }
+    }
+    for(int i=0;i<t;i++){
+        for(int j=0;j<t;j++){
+            if(!cores[i][j])
+                matriz[i][j]-=menor;
+            else if(cores[i][j]==2)
+                matriz[i][j]+=menor;
+
+        }
+    }
+    
+}
+
+void hungarian(int matriz[TAM][TAM], int t){
+    menor_linha(matriz,t);
+    menor_coluna(matriz,t);
+    int cores[TAM][TAM]={0};
+    int aut;
+    while((aut=num_linhas(matriz,t,cores))<t){
+        cout<<"kjngfsdjgf"<<aut<<endl;
+        cin>>aut;
+        novos_zeros(matriz,t,cores);
+        memset(cores,0,sizeof(cores));
+    }
+    return;
 
 }
 int main() {
-    int t=3;
-    int matriz[3][3]={{2500,4000,3500},
-                      {4000,6000,3500},
-                      {2000,4000,2500}};
+    ios::sync_with_stdio(false);
+    int t;
+    int matriz[TAM][TAM];
     Arco grafo[TAM][TAM];
-    /*1500  4000  4500
- 2000  6000  3500
- 2000  4000  2500*/
-    menor_linha(matriz, 3);
-    menor_coluna(matriz, 3);
-    hungarian(matriz, 3);
-    for(int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
+    cin>>t;
+    for(int i=0;i<t;i++)
+        for(int j=0;j<t;j++)
+            cin>>matriz[i][j];
+    hungarian(matriz, t);
+    for(int i=0;i<t;i++){
+        for(int j=0;j<t;j++){
             cout<<matriz[i][j]<<" ";
             if(!matriz[i][j])
                 grafo[i+1][j+t+1].capacidade=1;
@@ -215,6 +210,7 @@ int main() {
         cout<<endl;
     }
     cout<<endl;
+    //cin>>t;
     for(int i=0;i<=2*t+1;i++){
         for(int j=0;j<=2*t+1;j++)
             cout<<grafo[i][j].capacidade<<" ";
