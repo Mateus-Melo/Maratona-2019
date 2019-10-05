@@ -9,7 +9,7 @@
 using namespace std;
 int pu[TAM],pv[TAM],way[TAM],pairV[TAM];
 
-void hungarian(int matriz[TAM][TAM],int n) {
+void hungarian(int matriz[TAM][TAM],int n ) {
     int minv[TAM];
     bool used[TAM];
 
