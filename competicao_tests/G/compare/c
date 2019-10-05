@@ -1,0 +1,76 @@
+#!/usr/bin/env python2.7
+# encoding: utf-8
+import sys
+
+AC = 4
+WA = 6
+BAD_JUDGE = 43
+
+
+def read_solution(N, file, is_team):
+  which_solution = 'team solution' if is_team else 'judge solution'
+  exit_code = WA if is_team else BAD_JUDGE
+
+  solution = []
+  with open(file, 'r') as output_file:
+    output = output_file.readlines()
+    if len(output) != 1:
+      print('{} has multiple lines ({})'.format(which_solution, len(output)))
+      sys.exit(exit_code)
+    solution = map(int, output[0].split())
+
+  if len(solution) != N:
+    print('{} length does not match ({}, expected: {})'.format(which_solution, len(solution), N))
+    sys.exit(exit_code)
+
+  unique = set()
+  for i in solution:
+    if i < 1 or i > N:
+      print('{} has an invalid id {}'.format(which_solution, i))
+      sys.exit(exit_code)
+    unique.add(i)
+
+  if len(unique) != N:
+    print('{} has repeated values'.format(which_solution))
+    sys.exit(exit_code)
+
+  return solution
+
+
+try:
+  team_output_fn = sys.argv[1]
+  sol_output_fn = sys.argv[2]
+  problem_input_fn = sys.argv[3]
+
+  N = -1
+  a = []
+
+  with open(problem_input_fn, 'r') as input_file:
+    problem_input = input_file.readlines()
+    N = int(problem_input[0])
+    for line in problem_input[1:]:
+      a.append(map(int, line.split()))
+
+  team_solution = read_solution(N, team_output_fn, is_team=True)
+  reference_solution = read_solution(N, sol_output_fn, is_team=False)
+  is_same = team_solution == reference_solution
+
+  team = 1
+  reference = 1
+  for i in range(N):
+    team *= a[team_solution[i]-1][i]
+    reference *= a[reference_solution[i]-1][i]
+
+  if team == reference:
+    print('files match exactly' if is_same else 'different outputs, but confidence match!')
+    sys.exit(AC)
+  elif is_same:
+    print('same outputs, confidence mismatch..')
+    sys.exit(BAD_JUDGE)
+  else:
+    print('team confidence ({}) does not match reference ({})'.format(team, reference))
+    sys.exit(WA)
+
+except Exception as e:
+  print('something bad happened: {}'.format(e))
+  sys.exit(BAD_JUDGE)

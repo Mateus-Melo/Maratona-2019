@@ -7,6 +7,7 @@
 #define vertice second
 #define INF INT_MAX
 using namespace std;
+int pu[TAM],pv[TAM],way[TAM],pairV[TAM];
 struct Arco{
     int capacidade,fluxo;
     Arco(int c,int f){
@@ -74,9 +75,7 @@ void inicia_fluxo(Arco grafo[TAM][TAM],int s,int t){
                 break;
             }
         }
-    }
-    
-    
+    }        
 }
 void menor_linha(int matriz[TAM][TAM], int t){
     for(int i=0;i<t;i++){
@@ -98,86 +97,130 @@ void menor_coluna(int matriz[TAM][TAM], int t){
         }
     }
 }
-int direcao(int matriz[TAM][TAM],int linha,int col,int t){
-    int ret=0;
+int column_scan(int matriz[TAM][TAM], int t, int covered[TAM][TAM]){
+    int assignments=0;
     for(int i=0;i<t;i++){
-        ret-=(matriz[linha][i]==0);
-        ret+=(matriz[i][col]==0);
-    }
-    cout<<" afds"<<ret<<endl;
-    return ret;
-}
-
-bool colore(int matriz[TAM][TAM],int linha,int col, int dir,int cores[TAM][TAM], int t){
-    cout<<linha<<" "<<col<<" "<<cores[linha][col]<<" "<<dir<<endl;
-    if(cores[linha][col]==2)
-        return 0;
-    if(dir>0 && cores[linha][col]==1)
-        return 0;
-    if(dir<=0 && cores[linha][col]==-1)
-        return 0;
-    for(int i=0;i<t;i++){
-        if(dir>0){
-            if(cores[i][col])
-                cores[i][col]=2;
-            else
-                cores[i][col]=1;
-        }
-        else{
-            if(cores[linha][i])
-                cores[linha][i]=2;
-            else
-                cores[linha][i]=-1;
-        }
-    }
-    cout<<"aqui"<<endl;
-    return 1;
-}
-
-int num_linhas(int matriz[TAM][TAM],int t, int cores[TAM][TAM]){
-    int ret=0;
-    for(int i=0;i<t;i++){
+        int cont=0;
+        int pos;
         for(int j=0;j<t;j++){
-            if(!matriz[i][j])
-                ret+=colore(matriz,i,j,direcao(matriz,i,j,t),cores,t);
+            if(!matriz[j][i]&&!covered[j][i]){
+                cont++;
+                pos=j;
+            }
+        }
+        if(cont==1){
+            assignments++;
+            for(int j=0;j<t;j++)
+                covered[pos][j]++;
         }
     }
-    cout<<"aaaa"<<ret<<endl;
-    return ret;
+    return assignments;
 }
-
-void novos_zeros(int matriz[TAM][TAM],int t,int cores[TAM][TAM]){
+int row_scan(int matriz[TAM][TAM],int t, int covered[TAM][TAM]){
+    int assignments=0;
+    for(int i=0;i<t;i++){
+        int cont=0;
+        int pos;
+        for(int j=0;j<t;j++){
+            if(!matriz[i][j]&&!covered[i][j]){
+                cont++;
+                pos=j;
+            }
+        }
+        if(cont==1){
+            assignments++;
+            for(int j=0;j<t;j++)
+                covered[j][pos]++;
+        }
+    }
+    return assignments;
+}
+void novos_zeros(int matriz[TAM][TAM],int t, int covered[TAM][TAM]){
     int menor=INF;
     for(int i=0;i<t;i++){
         for(int j=0;j<t;j++){
-            if(!cores[i][j])
+            if(!covered[i][j])
                 menor=min(menor,matriz[i][j]);
         }
     }
     for(int i=0;i<t;i++){
         for(int j=0;j<t;j++){
-            if(!cores[i][j])
+            if(!covered[i][j])
                 matriz[i][j]-=menor;
-            else if(cores[i][j]==2)
+            if(covered[i][j]==2)
                 matriz[i][j]+=menor;
-
         }
     }
-    
+    return;
 }
-
-void hungarian(int matriz[TAM][TAM], int t){
+/*void hungarian(int matriz[TAM][TAM],int t){
     menor_linha(matriz,t);
     menor_coluna(matriz,t);
-    int cores[TAM][TAM]={0};
-    int aut;
-    while((aut=num_linhas(matriz,t,cores))<t){
-        cout<<"kjngfsdjgf"<<aut<<endl;
-        cin>>aut;
-        novos_zeros(matriz,t,cores);
-        memset(cores,0,sizeof(cores));
+    int covered[TAM][TAM]={0};
+    int assigments;
+    while(true){
+        for(int i=0;i<t;i++){
+            for(int j=0;j<t;j++)
+                cout<<matriz[i][j]<<" ";
+            cout<<endl;
+        }
+        assigments=row_scan(matriz,t,covered);
+        assigments+=column_scan(matriz,t,covered);
+        if(assigments==t)
+            return;
+        novos_zeros(matriz,t,covered);
+        cout<<endl;
+        for(int i=0;i<t;i++){
+            for(int j=0;j<t;j++){
+                cout<<covered[i][j]<<" ";
+                covered[i][j]=0;
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+        cin>>t;
     }
-    return;
+}*/
+
+void hungarian(int matriz[TAM][TAM],int n) {
+    int minv[TAM];
+    bool used[TAM];
+
+	memset(&pairV, 0, sizeof pairV);
+	for(int i = 1, j0 = 0; i <= n; i++) {
+		pairV[0] = i;
+		memset(&minv, INF, sizeof(minv));
+		memset(&used, false, sizeof(used));
+		do {
+			used[j0] = true;
+			int i0 = pairV[j0], delta = INF, j1;
+			for(int j = 1; j <= n; j++) {
+				if (used[j]) continue;
+				int cur = matriz[i0][j] - pu[i0] - pv[j];
+				if (cur < minv[j])
+					minv[j] = cur, way[j] = j0;
+				if (minv[j] < delta)
+					delta = minv[j], j1 = j;
+			}
+			for(int j = 0; j <= n; j++) {
+				if (used[j])
+					pu[pairV[j]] += delta, pv[j] -= delta;
+				else minv[j] -= delta;
+			}
+			j0 = j1;
+		} while(pairV[j0] != 0);
+		do {
+			int j1 = way[j0];
+			pairV[j0] = pairV[j1];
+			j0 = j1;
+		} while(j0);
+	}
+}
+void negates(int matriz[TAM][TAM],int t){
+    for(int i=1;i<=t;i++){
+        for(int j=1;j<=t;j++)
+            matriz[i][j]=-matriz[i][j];
+    }
 
 }
 int main() {
@@ -186,11 +229,15 @@ int main() {
     int matriz[TAM][TAM];
     Arco grafo[TAM][TAM];
     cin>>t;
-    for(int i=0;i<t;i++)
-        for(int j=0;j<t;j++)
+    for(int i=1;i<=t;i++){
+        for(int j=1;j<=t;j++){
             cin>>matriz[i][j];
-    hungarian(matriz, t);
-    for(int i=0;i<t;i++){
+            matriz[i][j]=round(100*log(matriz[i][j]));
+        }
+    }
+    negates(matriz,t);
+    hungarian(matriz,t);        
+    /*for(int i=0;i<t;i++){
         for(int j=0;j<t;j++){
             cout<<matriz[i][j]<<" ";
             if(!matriz[i][j])
@@ -216,12 +263,24 @@ int main() {
             cout<<grafo[i][j].capacidade<<" ";
         cout<<endl;
     }
+    int saida[TAM];
     for(int i=1;i<=t;i++){
         for(int j=1;j<=t;j++){
             if(grafo[i][j+t].fluxo&&grafo[i][j+t].fluxo==grafo[i][j+t].capacidade){
-                cout<<j<<endl;
+                //cout<<i<<" "<<j<<endl;
+                saida[j]=i;
                 break;
             }
         }
     }
+
+    cout<<saida[1];
+    for(int i=2;i<=t;i++)
+        cout<<" "<<saida[i];
+    cout<<"\n";*/
+    cout<<pairV[1];
+    for(int i=2;i<=t;i++){
+        cout<<" "<<pairV[i];
+    }
+    cout<<"\n";
 }
